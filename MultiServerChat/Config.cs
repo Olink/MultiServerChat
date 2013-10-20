@@ -12,6 +12,8 @@ namespace MultiServerChat
 		public string RestURL = "http://127.0.0.1:7878/msc";
 		public string Token = "abcdef";
 		public string ChatFormat = "[{0}]{2}{3}{4}: {5}";
+		public bool SendChat = true;
+		public bool DisplayChat = true;
         /// <summary>
         /// Reads a configuration file from a given path
         /// </summary>

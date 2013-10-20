@@ -63,6 +63,9 @@ namespace MultiServerChat
 
 		private object RestChat(RestVerbs verbs, IParameterCollection parameters, SecureRest.TokenData tokenData)
 		{
+			if (!Config.DisplayChat)
+				return new RestObject();
+
 			if (!string.IsNullOrWhiteSpace(parameters["message"]))
 			{
 				var bytes = Convert.FromBase64String(parameters["message"]);
@@ -76,6 +79,9 @@ namespace MultiServerChat
 
 		private void OnChat(ServerChatEventArgs args)
 		{
+			if (!Config.SendChat)
+				return;
+
 			var tsplr = TShock.Players[args.Who];
 			if (tsplr == null)
 			{
@@ -112,8 +118,15 @@ namespace MultiServerChat
 
 				var uri = String.Format("{0}?message={1}&token={2}", Config.RestURL, base64, Config.Token);
 
-				var request = (HttpWebRequest)WebRequest.Create(uri);
-				request.GetResponse();
+				try
+				{
+					var request = (HttpWebRequest)WebRequest.Create(uri);
+					request.GetResponse();
+				}
+				catch (Exception)
+				{
+					Log.Error("Failed to make request to other server, server is down?");
+				}
 			}
 		}
 	}
