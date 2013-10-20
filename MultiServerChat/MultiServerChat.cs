@@ -18,6 +18,27 @@ namespace MultiServerChat
 	{
 		ConfigFile Config = new ConfigFile();
 		private string savePath = "";
+
+		public override string Author
+		{
+			get { return "Zack Piispanen"; }
+		}
+
+		public override string Description
+		{
+			get { return "Facilitate chat between servers."; }
+		}
+
+		public override string Name
+		{
+			get { return "Multiserver Chat"; }
+		}
+
+		public override Version Version
+		{
+			get{ return new Version(1, 0, 0, 0); }
+		}
+
 		public MultiServerChat(Main game) : base(game)
 		{
 			savePath = Path.Combine(TShock.SavePath, "multiserverchat.json");
@@ -29,6 +50,15 @@ namespace MultiServerChat
 		{
 			ServerApi.Hooks.ServerChat.Register(this, OnChat, 10);
 			TShock.RestApi.Register(new SecureRestCommand("/msc", RestChat, "msc.canchat"));
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				ServerApi.Hooks.ServerChat.Deregister(this, OnChat);
+			}
+			base.Dispose(disposing);
 		}
 
 		private object RestChat(RestVerbs verbs, IParameterCollection parameters, SecureRest.TokenData tokenData)
