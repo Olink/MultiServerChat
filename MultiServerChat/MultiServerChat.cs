@@ -88,6 +88,7 @@ namespace MultiServerChat
 			return new RestObject();
 		}
 
+		private bool failure = false;
 		private void OnChat(ServerChatEventArgs args)
 		{
 			if (!Config.SendChat)
@@ -134,10 +135,15 @@ namespace MultiServerChat
 					var request = (HttpWebRequest)WebRequest.Create(uri);
 					using (var res = request.GetResponse())
 					{}
+					failure = false;
 				}
 				catch (Exception)
 				{
-					Log.Error("Failed to make request to other server, server is down?");
+					if (!failure)
+					{
+						Log.Error("Failed to make request to other server, server is down?");
+						failure = true;
+					}
 				}
 			}
 		}
