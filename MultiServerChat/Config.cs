@@ -9,8 +9,7 @@ namespace MultiServerChat
 {
 	internal class ConfigFile
 	{
-		public List<string> RestURLs = new List<string> {"http://127.0.0.1:7878/msc"};
-
+		public List<string> RestURLs = new List<string>();
 		public string Token = "abcdef";
 		public string ChatFormat = "[{0}]{2}{3}{4}: {5}";
 		public bool SendChat = true;
