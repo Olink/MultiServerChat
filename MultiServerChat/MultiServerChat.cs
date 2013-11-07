@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Web;
 using HttpServer;
 using Newtonsoft.Json;
 using Rests;
@@ -79,7 +80,8 @@ namespace MultiServerChat
 
 			if (!string.IsNullOrWhiteSpace(parameters["message"]))
 			{
-				var bytes = Convert.FromBase64String(parameters["message"]);
+				var decoded = HttpUtility.UrlDecode(parameters["message"]);
+				var bytes = Convert.FromBase64String(decoded);
 				var str = Encoding.UTF8.GetString(bytes);
 				var message = Message.FromJson(str);
 				TShock.Utils.Broadcast(message.Text, message.Red, message.Green, message.Blue);
@@ -127,22 +129,26 @@ namespace MultiServerChat
 
 				var bytes = Encoding.UTF8.GetBytes(message.ToString());
 				var base64 = Convert.ToBase64String(bytes);
-
-				var uri = String.Format("{0}?message={1}&token={2}", Config.RestURL, base64, Config.Token);
-
-				try
+				var encoded = HttpUtility.UrlEncode(base64);
+				foreach (var url in Config.RestURLs)
 				{
-					var request = (HttpWebRequest)WebRequest.Create(uri);
-					using (var res = request.GetResponse())
-					{}
-					failure = false;
-				}
-				catch (Exception)
-				{
-					if (!failure)
+					var uri = String.Format("{0}?message={1}&token={2}", url, encoded, Config.Token);
+
+					try
 					{
-						Log.Error("Failed to make request to other server, server is down?");
-						failure = true;
+						var request = (HttpWebRequest) WebRequest.Create(uri);
+						using (var res = request.GetResponse())
+						{
+						}
+						failure = false;
+					}
+					catch (Exception)
+					{
+						if (!failure)
+						{
+							Log.Error("Failed to make request to other server, server is down?");
+							failure = true;
+						}
 					}
 				}
 			}

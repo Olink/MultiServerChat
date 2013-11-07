@@ -7,9 +7,10 @@ using Newtonsoft.Json;
 
 namespace MultiServerChat
 {
-	class ConfigFile
+	internal class ConfigFile
 	{
-		public string RestURL = "http://127.0.0.1:7878/msc";
+		public List<string> RestURLs = new List<string> {"http://127.0.0.1:7878/msc"};
+
 		public string Token = "abcdef";
 		public string ChatFormat = "[{0}]{2}{3}{4}: {5}";
 		public bool SendChat = true;
