@@ -10,6 +10,7 @@ using Rests;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
+using TShockAPI.Hooks;
 
 namespace MultiServerChat
 {
@@ -44,6 +45,7 @@ namespace MultiServerChat
 			savePath = Path.Combine(TShock.SavePath, "multiserverchat.json");
 			Config = ConfigFile.Read(savePath);
 			Config.Write(savePath);
+			TShockAPI.Hooks.GeneralHooks.ReloadEvent += OnReload;
 		}
 
 		public override void Initialize()
@@ -59,6 +61,15 @@ namespace MultiServerChat
 				ServerApi.Hooks.ServerChat.Deregister(this, OnChat);
 			}
 			base.Dispose(disposing);
+		}
+
+		private void OnReload(ReloadEventArgs args)
+		{
+			if (args.Player.Group.HasPermission("msc.reload"))
+			{
+				Config = ConfigFile.Read(savePath);
+				Config.Write(savePath);
+			}
 		}
 
 		private object RestChat(RestVerbs verbs, IParameterCollection parameters, SecureRest.TokenData tokenData)
@@ -121,7 +132,8 @@ namespace MultiServerChat
 				try
 				{
 					var request = (HttpWebRequest)WebRequest.Create(uri);
-					request.GetResponse();
+					using (var res = request.GetResponse())
+					{}
 				}
 				catch (Exception)
 				{
