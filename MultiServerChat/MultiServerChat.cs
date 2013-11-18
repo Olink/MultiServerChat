@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Web;
 using HttpServer;
 using Newtonsoft.Json;
@@ -80,11 +81,17 @@ namespace MultiServerChat
 
 			if (!string.IsNullOrWhiteSpace(parameters["message"]))
 			{
-				var decoded = HttpUtility.UrlDecode(parameters["message"]);
-				var bytes = Convert.FromBase64String(decoded);
-				var str = Encoding.UTF8.GetString(bytes);
-				var message = Message.FromJson(str);
-				TShock.Utils.Broadcast(message.Text, message.Red, message.Green, message.Blue);
+				try
+				{
+					var decoded = HttpUtility.UrlDecode(parameters["message"]);
+					var bytes = Convert.FromBase64String(decoded);
+					var str = Encoding.UTF8.GetString(bytes);
+					var message = Message.FromJson(str);
+					TShock.Utils.Broadcast(message.Text, message.Red, message.Green, message.Blue);
+				}
+				catch (Exception)
+				{
+				}
 			}
 
 			return new RestObject();
@@ -117,40 +124,44 @@ namespace MultiServerChat
 					return;
 				}
 
-				var message = new Message()
+				ThreadPool.QueueUserWorkItem(f =>
 				{
-					Text =
-						String.Format(Config.ChatFormat, TShock.Config.ServerName, tsplr.Group.Name, tsplr.Group.Prefix, tsplr.Name, tsplr.Group.Suffix,
-							args.Text),
-					Red = tsplr.Group.R,
-					Green = tsplr.Group.G,
-					Blue = tsplr.Group.B
-				};
-
-				var bytes = Encoding.UTF8.GetBytes(message.ToString());
-				var base64 = Convert.ToBase64String(bytes);
-				var encoded = HttpUtility.UrlEncode(base64);
-				foreach (var url in Config.RestURLs)
-				{
-					var uri = String.Format("{0}?message={1}&token={2}", url, encoded, Config.Token);
-
-					try
+					var message = new Message()
 					{
-						var request = (HttpWebRequest) WebRequest.Create(uri);
-						using (var res = request.GetResponse())
-						{
-						}
-						failure = false;
-					}
-					catch (Exception)
+						Text =
+							String.Format(Config.ChatFormat, TShock.Config.ServerName, tsplr.Group.Name, tsplr.Group.Prefix, tsplr.Name,
+								tsplr.Group.Suffix,
+								args.Text),
+						Red = tsplr.Group.R,
+						Green = tsplr.Group.G,
+						Blue = tsplr.Group.B
+					};
+
+					var bytes = Encoding.UTF8.GetBytes(message.ToString());
+					var base64 = Convert.ToBase64String(bytes);
+					var encoded = HttpUtility.UrlEncode(base64);
+					foreach (var url in Config.RestURLs)
 					{
-						if (!failure)
+						var uri = String.Format("{0}?message={1}&token={2}", url, encoded, Config.Token);
+
+						try
 						{
-							Log.Error("Failed to make request to other server, server is down?");
-							failure = true;
+							var request = (HttpWebRequest) WebRequest.Create(uri);
+							using (var res = request.GetResponse())
+							{
+							}
+							failure = false;
+						}
+						catch (Exception)
+						{
+							if (!failure)
+							{
+								Log.Error("Failed to make request to other server, server is down?");
+								failure = true;
+							}
 						}
 					}
-				}
+				});
 			}
 		}
 	}
