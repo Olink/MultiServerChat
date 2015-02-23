@@ -74,16 +74,16 @@ namespace MultiServerChat
 			}
 		}
 
-		private object RestChat(RestVerbs verbs, IParameterCollection parameters, SecureRest.TokenData tokenData)
+		private object RestChat(RestRequestArgs args)
 		{
 			if (!Config.DisplayChat)
 				return new RestObject();
 
-			if (!string.IsNullOrWhiteSpace(parameters["message"]))
+			if (!string.IsNullOrWhiteSpace(args.Parameters["message"]))
 			{
 				try
 				{
-					var decoded = HttpUtility.UrlDecode(parameters["message"]);
+					var decoded = HttpUtility.UrlDecode(args.Parameters["message"]);
 					var bytes = Convert.FromBase64String(decoded);
 					var str = Encoding.UTF8.GetString(bytes);
 					var message = Message.FromJson(str);
